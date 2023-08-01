@@ -1,64 +1,172 @@
 // creare un'applicazione node che legga un qualsiasi file di testo
-// e nella stessa cartella in cui lo legge scriva un file che si chiama 
+// e nella stessa cartella in cui lo legge scriva un file che si chiama
 // come l'originale aggiungendo '-report'
 // es pippo.txt => pippo-report.txt;
 
 // numero caratteri: 400 (non compresi gli spazi)
 // numero parole: 100
 
-const fs = require('fs');
-const path = require('path');
-
-const filename = process.argv[2];
-const parsedFilename = path.parse(filename);
-const reportFilename = parsedFilename.name + '-report' + parsedFilename.ext;
-
-fs.readFile(filename, 'utf8', function(err, data) {
-  if (err) {
-    console.error(err);
-    return;
-  }
-
-  const words = data.split(' ');
-  let characters = 0;
-  for (let i = 0; i < data.length; i++) {
-    if (data[i] !== ' ') {
-      characters++;
-    }
-  }
-
-  console.log('Numero parole:', words.length);
-  console.log('Numero caratteri:', characters);
-
-  fs.writeFile(reportFilename, 'Numero parole: ' + words.length + '\nNumero caratteri: ' + characters, function(err) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    console.log('Il file', reportFilename, 'è stato creato con successo!');
-  });
-});
-
-// Questo codice crea un’applicazione node che legge un qualsiasi file di testo // e nella stessa cartella in cui lo legge scrive un file che si chiama // come l’originale aggiungendo ‘-report’ // es pippo.txt => pippo-report.txt;
-
-// Il codice mostra anche il numero di caratteri (non compresi gli spazi) e il numero di parole nel file originale
-
-// Importo i moduli fs e path per lavorare con i file e i percorsi const fs = require(‘fs’); const path = require(‘path’);
-
-// Prendo il nome del file da leggere dal terzo argomento della linea di comando const filename = process.argv[2]; // Estraggo il nome e l’estensione del file usando il modulo path const parsedFilename = path.parse(filename); // Creo il nome del file da scrivere aggiungendo ‘-report’ al nome originale const reportFilename = parsedFilename.name + ‘-report’ + parsedFilename.ext;
-
-// Leggo il file originale in formato utf8 usando il modulo fs fs.readFile(filename, ‘utf8’, function(err, data) { // Se c’è un errore, lo stampo e termino la funzione if (err) { console.error(err); return; }
-
-// Divido il contenuto del file in parole usando lo spazio come separatore const words = data.split(’ '); // Inizializzo una variabile per contare i caratteri let characters = 0; // Scorro tutti i caratteri del file for (let i = 0; i < data.length; i++) { // Se il carattere non è uno spazio, lo aggiungo al conteggio if (data[i] !== ’ ') { characters++; } }
-
-// Stampo il numero di parole e il numero di caratteri console.log(‘Numero parole:’, words.length); console.log(‘Numero caratteri:’, characters);
-
-// Scrivo il file di report con le stesse informazioni fs.writeFile(reportFilename, 'Numero parole: ’ + words.length + '\nNumero caratteri: ’ + characters, function(err) { // Se c’è un errore, lo stampo e termino la funzione if (err) { console.error(err); return; }
-
-// Altrimenti, stampo un messaggio di successo
-// console.log('Il file', reportFilename, 'è stato creato con successo!'); }); });
-
 // task aggiuntivi:
 // a) carattere con più occorrenze: e
 // b) parola con più occorrenze: un
+
+const fs = require("fs");
+
+const fileUrl = process.argv[2];
+
+// console.log(process.argv[2]);
+const outputUrl = createOutputUrl(fileUrl);
+
+const data = readFile(fileUrl);
+
+if (data) {
+  const report = createReport(data);
+  writeData(outputUrl, report);
+}
+
+function createOutputUrl(url) {
+  const splittedUrl = url.split(".");
+  // const finalUrl='.'+splittedUrl[1]+'-report.'+splittedUrl[2];
+  const lastPart = splittedUrl.pop();
+  const firstPart = splittedUrl.join(".");
+  const finalUrl = firstPart + "-report." + lastPart;
+  return finalUrl;
+}
+
+function createReport(data) {
+  let report =
+    "numero di caratteri: " +
+    countChars(data) +
+    "\n" +
+    "numero di parole: " +
+    countWords(data) +
+    "\n" +
+    "carattere con più occorrenze: " +
+    mostUsedChar(data) +
+    "\n" +
+    "parola con più occorrenze: " +
+    mostUsedWord(data);
+  return report;
+}
+
+function countChars(data) {
+  const dataWithoutSpaces = data.replace(/ /g, "");
+  return dataWithoutSpaces.length;
+}
+
+function countWords(data) {
+  const dataArray = data.split(" ");
+  return dataArray.length;
+}
+
+function topOccurencyInArray(arr) {
+  let occurrencyMap = {};
+  for (let i = 0; i < arr.length; i++) {
+    const el = arr[i];
+
+    if (occurrencyMap[el]) {
+      occurrencyMap[el] += 1;
+    } else {
+      occurrencyMap[el] = 1;
+    }
+  }
+
+  const keyValues = Object.entries(occurrencyMap);
+
+  keyValues.sort((e1, e2) => {
+    const firstValue = e1[1];
+    const secondValue = e2[1];
+    return secondValue - firstValue;
+  });
+
+  return keyValues[0][0];
+}
+
+function mostUsedChar(data) {
+  const dataWithoutSpaces = data.replace(/ /g, "").split("");
+  return topOccurencyInArray(dataWithoutSpaces);
+
+  //Lorem ipsum dolor sit amet
+  // let charMap = {};
+  // for (let i = 0; i < dataWithoutSpaces.length; i++) {
+  //     const char = dataWithoutSpaces[i];
+
+  //     if(charMap[char]){
+  //         charMap[char]+=1;
+  //     }else{
+  //         charMap[char]=1;
+  //     }
+  // }
+  // const keyValues = Object.entries(charMap);
+
+  // keyValues.sort((e1,e2) =>{
+  //     const firstValue = e1[1];
+  //     const secondValue = e2[1];
+  //     return secondValue - firstValue;
+  // });
+
+  // return keyValues[0][0];
+}
+
+function mostUsedWord(data) {
+  const splittedData = data
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()(\r\n|\n|\r)]/g, "")
+    .split(" ");
+  return topOccurencyInArray(splittedData);
+  // let wordMap = {};
+
+  // for (let i = 0; i < splittedData.length; i++) {
+  //     const word = splittedData[i];
+
+  //     if(wordMap[word]){
+  //         wordMap[word]+=1;
+  //     }else{
+  //         wordMap[word]=1;
+  //     }
+  // }
+
+  // console.log(wordMap);
+  // const keyValues = Object.entries(wordMap);
+
+  // keyValues.sort((e1,e2) =>{
+  //     const firstValue = e1[1];
+  //     const secondValue = e2[1];
+  //     return secondValue - firstValue;
+  // });
+
+  // return keyValues[0][0];
+}
+
+function readFile(url) {
+  try {
+    const data = fs.readFileSync(url, "utf8");
+    return data;
+  } catch (err) {
+    console.error(err.message);
+    return null;
+  }
+}
+
+function writeData(url, data) {
+  try {
+    fs.writeFileSync(url, data);
+  } catch (err) {
+    console.error(err.message);
+  }
+}
+
+// function mostUsedChar2(data){
+//     //Lorem ipsum dolor sit amet
+//     let charMap = new Map();
+//     for (let i = 0; i < data.length; i++) {
+//         const char = data[i];
+
+//         if(charMap.get(char)){
+//             charMap.set(char, charMap.get(char) + 1);
+//         }else{
+//             charMap.set(char, 1);
+//         }
+
+//     }
+//     console.log(charMap);
+// }
